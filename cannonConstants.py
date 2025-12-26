@@ -29,3 +29,8 @@ itemToOriginOffset = np.array([-28, 14, -18])
 # Same orientation as wind charge coordinates
 pearlPosition = np.array([-0.0625, 0.540222006, +0.0625])
 
+# Pearl velocity at the moment of explosion
+pearlInitialVelocity = np.array([0.0, -0.00372668019444022, 0.0])
+# (test)
+# -0.00372668019444022
+# -0.0333894137141385

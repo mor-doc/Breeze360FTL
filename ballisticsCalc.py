@@ -37,15 +37,15 @@ def rotateCoord(startDir: cardinalDir, endDir: cardinalDir, coordVec: np.ndarray
 
 
 
-# # Only valid for ender pearls due to ticking order
-# def projectileTickStep(pos, vel):
-#     # acceleration
-#     vel += np.array([0.0, -0.03, 0.0])
-#     # drag
-#     vel *= 0.99
-#     # position update
-#     pos += vel
-#     return (pos, vel)
+# Only valid for ender pearls due to ticking order
+def projectileTickStep(pos, vel):
+    # acceleration
+    newVel = vel + np.array([0.0, -0.03, 0.0])
+    # drag
+    newVel *= 0.99
+    # position update
+    newPos = pos + newVel
+    return (newPos, newVel)
 
 def pearlInitVelFromEndPos(tick: int, displacement: np.ndarray) -> np.ndarray:
     """
@@ -141,6 +141,7 @@ def findChargeAmount(velA: np.ndarray, velB: np.ndarray, targetOffs: np.ndarray)
     def optimizeFunc(x):
         tick, amtA, amtB = x
         velVector = amtA * velA + amtB * velB
+        velVector += pearlInitialVelocity
         pearlPos = pearlPosFromInitVel(tick, velVector)
         posError = targetOffs - pearlPos
         return posError
