@@ -1,10 +1,10 @@
-from tkinter import Tk, ttk, StringVar, Text
+from tkinter import Tk, ttk, StringVar, Text, messagebox
 import re
 
 from cannonConstants import cardinalDir
 from ballisticsCalc import calculateLaunchParameters
 import numpy as np
-
+np.set_printoptions(suppress=True)  # no scientific notation
 
 
 
@@ -46,6 +46,7 @@ class coordinateInput(ttk.Frame):
         return [int(self.coordX.get()), int(self.coordY.get()), int(self.coordZ.get())]
 
 
+
 from cannonConstants import *
 from ballisticsCalc import *
 def testArea():
@@ -78,11 +79,12 @@ def guiMain():
         quadId, flyTime, firstStack, lastStack, actualPos = calculateLaunchParameters(cannonDir, cannonOrigin, targetPos)
         quadDecode = ["Bottom-Left", "Top-left", "Top-Right", "Bottom-Right"]
         resultPrint = (
-            f"Target position: {str(targetPos)}\n"
+            f"Target position: {np.array2string(targetPos, precision=2, separator="; ")}\n"
             f"Sector in UI: {quadDecode[quadId.value]}\n"
             f"First charge stack size: {firstStack}\n"
             f"Last charge stack size: {lastStack}\n"
-            f"Nearest hit position: {str(actualPos)}; Flight time: {flyTime} ticks"
+            f"Nearest hit position: {np.array2string(actualPos, precision=2, separator="; ")}\n"
+            f"Flight time: {flyTime} gameticks"
         )
         resultText["state"] = "normal"
         resultText.delete(1.0, 1.0e6)
@@ -143,8 +145,8 @@ def guiMain():
 
 # This seems to work. TODO - polish
 #  (format coordinate output, expand result field)
-#  (add some info popups?)
-#  better coord input checking
+#  (add some info popups? Nah, make a README.md)
+#  better coord input checking (no, too hard)
 
 # /execute as @e[type=ender_pearl] run tellraw @a [{text:">Pos:"},{nbt:"Pos",entity:"@s"},{text:"\nVel:"},{nbt:"Motion",entity:"@s"}]
 
