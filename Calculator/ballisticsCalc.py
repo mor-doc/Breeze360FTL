@@ -1,4 +1,5 @@
-import numpy as np
+from numpy import ndarray, array, deg2rad, rad2deg, eye, sin, cos, matmul, transpose, vstack, arctan2, mod
+from numpy.linalg import inv, norm
 from scipy.optimize import fsolve
 from enum import Enum
 
@@ -12,7 +13,7 @@ class launchQuadId(Enum):
     SW = 2
     NW = 3
 
-def rotateCoord(startDir: cardinalDir, endDir: cardinalDir, coordVec: np.ndarray) -> np.ndarray:
+def rotateCoord(startDir: cardinalDir, endDir: cardinalDir, coordVec: ndarray) -> ndarray:
     """
     Rotate coordinate by azimuth from starting to final cardinal direction. 
     Example:
@@ -22,118 +23,118 @@ def rotateCoord(startDir: cardinalDir, endDir: cardinalDir, coordVec: np.ndarray
     Args:
         startDir (cardinalDir): initial facing direction
         endDir (cardinalDir): final facing direction
-        coordVec (np.ndarray): 1x3 vector to be rotated
+        coordVec (ndarray): 1x3 vector to be rotated
 
     Returns:
-        np.ndarray: 1x3 vector facing new direction
+        ndarray: 1x3 vector facing new direction
     """
     angleCCW = (endDir.value - startDir.value) * 90
-    angleRad = np.deg2rad(angleCCW)
-    rotMatrix = np.eye(3)
-    rotMatrix[0][0] = rotMatrix[2][2] = np.cos(angleRad)
-    rotMatrix[0][2] = np.sin(angleRad)
-    rotMatrix[2][0] = -np.sin(angleRad)
-    return np.matmul(coordVec, rotMatrix)
+    angleRad = deg2rad(angleCCW)
+    rotMatrix = eye(3)
+    rotMatrix[0][0] = rotMatrix[2][2] = cos(angleRad)
+    rotMatrix[0][2] = sin(angleRad)
+    rotMatrix[2][0] = -sin(angleRad)
+    return matmul(coordVec, rotMatrix)
 
 
 
 # Only valid for ender pearls due to ticking order
 def projectileTickStep(pos, vel):
     # acceleration
-    newVel = vel + np.array([0.0, -0.03, 0.0])
+    newVel = vel + array([0.0, -0.03, 0.0])
     # drag
     newVel *= 0.99
     # position update
     newPos = pos + newVel
     return (newPos, newVel)
 
-def pearlInitVelFromEndPos(tick: int, displacement: np.ndarray) -> np.ndarray:
+def pearlInitVelFromEndPos(tick: int, displacement: ndarray) -> ndarray:
     """
     Get initial velocity to get required ender pearl displacement after some time
     (see wiki for formula)
 
     Args:
         tick (int): flight time from trajectory start in gameticks
-        displacement (np.ndarray): target displacement as 1x3 vector
+        displacement (ndarray): target displacement as 1x3 vector
 
     Returns:
-        np.ndarray: initial velocity as 1x3 vector
+        ndarray: initial velocity as 1x3 vector
     """
     
     d = 0.9900000095367432
-    a = np.array([0.0, -0.03, 0.0])
+    a = array([0.0, -0.03, 0.0])
     return (1 - d) / (d * (1 - pow(d, tick))) * (displacement - d * tick * a / (1 - d)) + (d / (1 - d) * a)
 
-def pearlPosFromInitVel(tick: float, vel0: np.ndarray) -> np.ndarray:
+def pearlPosFromInitVel(tick: float, vel0: ndarray) -> ndarray:
     """
     Get ender pearl displacement from initial velocity after some time
     (see wiki for formula)
 
     Args:
         tick (float): time from trajectory start in gameticks
-        vel0 (np.ndarray): initial velocity as 1x3 vector
+        vel0 (ndarray): initial velocity as 1x3 vector
 
     Returns:
-        np.ndarray: displacement relative to starting point as 1x3 vector
+        ndarray: displacement relative to starting point as 1x3 vector
     """
 
     d = 0.9900000095367432
-    a = np.array([0.0, -0.03, 0.0])
+    a = array([0.0, -0.03, 0.0])
     return (d * (1 - pow(d, tick))) / (1 - d) * (vel0 - d / (1 - d) * a) + (d * tick * a / (1 - d))
 
-def getExplosionMatrix(velA:np.ndarray, velB:np.ndarray) -> np.ndarray:
+def getExplosionMatrix(velA:ndarray, velB:ndarray) -> ndarray:
     """
     Get E matrix from two 3D explosion velocity vectors
     (see tutorial wiki page)
 
     Args:
-        velA (np.ndarray): velocity from first explosion as 1x3 vector
-        velB (np.ndarray): velocity from second explosion as 1x3 vector
+        velA (ndarray): velocity from first explosion as 1x3 vector
+        velB (ndarray): velocity from second explosion as 1x3 vector
 
     Returns:
-        np.ndarray: 2x3 E matrix
+        ndarray: 2x3 E matrix
     """
     
-    velMatrix = np.transpose(np.vstack((velA, velB)))
-    A = np.matmul(np.transpose(velMatrix), velMatrix)
-    B = np.linalg.inv(A)
-    C = np.matmul(B, np.transpose(velMatrix))
+    velMatrix = transpose(vstack((velA, velB)))
+    A = matmul(transpose(velMatrix), velMatrix)
+    B = inv(A)
+    C = matmul(B, transpose(velMatrix))
     return C
 
-def getChargePearlPushVelocity(explosionCenterPos: np.ndarray, pearlFeetPos: np.ndarray) -> np.ndarray:
+def getChargePearlPushVelocity(explosionCenterPos: ndarray, pearlFeetPos: ndarray) -> ndarray:
     """
     Calculate impulse to ender pearl from one wind charge explosion. 
     Assumes 100% exposure 
     (see Explosion wiki page for formulas)
 
     Args:
-        explosionCenterPos (np.ndarray): position of wind charge explosion as 1x3 vector
-        pearlFeetPos (np.ndarray): position of ender pearl feet (reported position) as 1x3 vector
+        explosionCenterPos (ndarray): position of wind charge explosion as 1x3 vector
+        pearlFeetPos (ndarray): position of ender pearl feet (reported position) as 1x3 vector
 
     Returns:
-        np.ndarray: velocity change as 1x3 vector (away from wind charge)
+        ndarray: velocity change as 1x3 vector (away from wind charge)
     """
     
     feetDist = pearlFeetPos - explosionCenterPos
     PearlEyeHeight = 0.2125
     WindChargePower = 3.0
     exposure = 1.0    
-    magnitude = (1 - np.linalg.norm(feetDist) / (2 * WindChargePower)) * exposure
-    eyeVector = feetDist + np.array([0.0, PearlEyeHeight, 0.0])
-    velocityVector = eyeVector / np.linalg.norm(eyeVector) * magnitude
+    magnitude = (1 - norm(feetDist) / (2 * WindChargePower)) * exposure
+    eyeVector = feetDist + array([0.0, PearlEyeHeight, 0.0])
+    velocityVector = eyeVector / norm(eyeVector) * magnitude
     return velocityVector
 
-def findChargeAmount(velA: np.ndarray, velB: np.ndarray, targetOffs: np.ndarray) -> np.ndarray:
+def findChargeAmount(velA: ndarray, velB: ndarray, targetOffs: ndarray) -> ndarray:
     """
     Solve for wind charge stack sizes and flight time
 
     Args:
-        velA (np.ndarray): velocity added to ender pearl from one wind charge in position A. Format - 1x3 vector
-        velB (np.ndarray): velocity added to ender pearl from one wind charge in position B. Format - 1x3 vector
-        targetOffs (np.ndarray): relative offset from initial pearl position to target
+        velA (ndarray): velocity added to ender pearl from one wind charge in position A. Format - 1x3 vector
+        velB (ndarray): velocity added to ender pearl from one wind charge in position B. Format - 1x3 vector
+        targetOffs (ndarray): relative offset from initial pearl position to target
 
     Returns:
-        np.ndarray: nearest solution as 1x3 vector of floats. 
+        ndarray: nearest solution as 1x3 vector of floats. 
             Element 0 - flight time (in gameticks). Element 1 - size of charge stack A. Element 2 - size of charge stack B.
     """
     
@@ -145,19 +146,19 @@ def findChargeAmount(velA: np.ndarray, velB: np.ndarray, targetOffs: np.ndarray)
         pearlPos = pearlPosFromInitVel(tick, velVector)
         posError = targetOffs - pearlPos
         return posError
-    result = fsolve(optimizeFunc, [1, 0, 0])
+    result = fsolve(optimizeFunc, [1.0e9, 0, 0])
     
     return result # type: ignore
 
-def getLocalQuadData(targetOffs : np.ndarray) -> tuple[launchQuadId, np.ndarray, np.ndarray]:
+def getLocalQuadData(targetOffs : ndarray) -> tuple[launchQuadId, ndarray, ndarray]:
     """
     Get shooting quadrant info from target position offset
 
     Args:
-        targetOffs (np.ndarray): target position relative to acceleration zone in cannon-local frame
+        targetOffs (ndarray): target position relative to acceleration zone in cannon-local frame
 
     Returns:
-        tuple[launchQuadId, np.ndarray, np.ndarray]: id of quad for UI, position of first charge stack, position of last charge stack
+        tuple[launchQuadId, ndarray, ndarray]: id of quad for UI, position of first charge stack, position of last charge stack
     """
     
     # Tested, adjusted, seems to give correct results.
@@ -165,9 +166,9 @@ def getLocalQuadData(targetOffs : np.ndarray) -> tuple[launchQuadId, np.ndarray,
     chargePearlVectors = chargePositions - pearlPosition
     
     # Add target displacement into same array for batch processing
-    allVectorArr = np.vstack((chargePearlVectors, -targetOffs))
-    chargeAngles = np.arctan2(-allVectorArr[:, 2], allVectorArr[:, 0])
-    simpleAnglesDeg = np.mod(np.rad2deg(chargeAngles) + 360, 360)
+    allVectorArr = vstack((chargePearlVectors, -targetOffs))
+    chargeAngles = arctan2(-allVectorArr[:, 2], allVectorArr[:, 0])
+    simpleAnglesDeg = mod(rad2deg(chargeAngles) + 360, 360)
     targetAngleDeg = simpleAnglesDeg[4]
     
     # Find nearest angle in CCW direction
@@ -187,17 +188,17 @@ def getLocalQuadData(targetOffs : np.ndarray) -> tuple[launchQuadId, np.ndarray,
     
     return (quadId, firstStackCoord, secondStackcoord)
 
-def calculateLaunchParameters(cannonDir : cardinalDir, cannonPos: np.ndarray, targetPos: np.ndarray) -> tuple[launchQuadId, int, int, int, np.ndarray]:
+def calculateLaunchParameters(cannonDir : cardinalDir, cannonPos: ndarray, targetPos: ndarray) -> tuple[launchQuadId, int, int, int, ndarray]:
     """
     Calculate launch parameters for the cannon to hit near the target
 
     Args:
         cannonDir (cardinalDir): cardinal direction taken looking at item frame
-        cannonPos (np.ndarray): absolute position of block behind item frame as 1x3 vector
-        targetPos (np.ndarray): absolute target position as 1x3 vector
+        cannonPos (ndarray): absolute position of block behind item frame as 1x3 vector
+        targetPos (ndarray): absolute target position as 1x3 vector
 
     Returns:
-        tuple[launchQuadId, int, int, int, np.ndarray]: launch parameters:
+        tuple[launchQuadId, int, int, int, ndarray]: launch parameters:
             - index of quadrant to select with item frame (0 is bottom-left, 3 is bottom-right)
             - flight time in gameticks
             - number of wind charges in first stack

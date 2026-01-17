@@ -3,8 +3,8 @@ import re
 
 from cannonConstants import cardinalDir
 from ballisticsCalc import calculateLaunchParameters
-import numpy as np
-np.set_printoptions(suppress=True)  # no scientific notation
+from numpy import set_printoptions, array, array2string
+set_printoptions(suppress=True)  # no scientific notation
 
 
 
@@ -59,7 +59,7 @@ def testArea():
     velB = getChargePearlPushVelocity(chargePositions[0], pearlPosition)
     velVec = velA * countA + velB * countB
     velVec += pearlInitialVelocity
-    dummyPos = np.array([0, 0, 0])
+    dummyPos = array([0, 0, 0])
     newPos, newVel = projectileTickStep(dummyPos, velVec)
     print(f"next tick vel:{newVel}")
     
@@ -74,16 +74,16 @@ def guiMain():
     
     def updateResult(*args):
         cannonDir = cardinalDir[cardDir.get().upper()]
-        cannonOrigin = np.array(originCoords.getCoords())
-        targetPos = np.array(targetCoords.getCoords())
+        cannonOrigin = array(originCoords.getCoords())
+        targetPos = array(targetCoords.getCoords())
         quadId, flyTime, firstStack, lastStack, actualPos = calculateLaunchParameters(cannonDir, cannonOrigin, targetPos)
         quadDecode = ["Bottom-Left", "Top-left", "Top-Right", "Bottom-Right"]
         resultPrint = (
-            f"Target position: {np.array2string(targetPos, precision=2, separator="; ")}\n"
+            f"Target position: {array2string(targetPos, precision=2, separator="; ")}\n"
             f"Sector in UI: {quadDecode[quadId.value]}\n"
             f"First charge stack size: {firstStack}\n"
             f"Last charge stack size: {lastStack}\n"
-            f"Nearest hit position: {np.array2string(actualPos, precision=2, separator="; ")}\n"
+            f"Nearest hit position: {array2string(actualPos, precision=2, separator="; ")}\n"
             f"Flight time: {flyTime} gameticks"
         )
         resultText["state"] = "normal"
