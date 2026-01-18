@@ -1,16 +1,11 @@
-from tkinter import Tk, ttk, StringVar, Text, messagebox
+from tkinter import Tk, ttk, StringVar, Text
 import re
 
 from cannonConstants import cardinalDir
 from ballisticsCalc import calculateLaunchParameters
+from math import ceil
 from numpy import set_printoptions, array, array2string
 set_printoptions(suppress=True)  # no scientific notation
-
-
-
-
-
-
 
 # Wrapper class for 3 coords
 class coordinateInput(ttk.Frame):
@@ -45,30 +40,42 @@ class coordinateInput(ttk.Frame):
     def getCoords(self) -> list[int]:
         return [int(self.coordX.get()), int(self.coordY.get()), int(self.coordZ.get())]
 
-
-
-from cannonConstants import *
-from ballisticsCalc import *
-def testArea():
-    # Testing area - running some functions manually
-
-    # Test - 10k target, comparing prediction and reality. 
-    countA = 19
-    countB = 152
-    velA = getChargePearlPushVelocity(chargePositions[3], pearlPosition)
-    velB = getChargePearlPushVelocity(chargePositions[0], pearlPosition)
-    velVec = velA * countA + velB * countB
-    velVec += pearlInitialVelocity
-    dummyPos = array([0, 0, 0])
-    newPos, newVel = projectileTickStep(dummyPos, velVec)
-    print(f"next tick vel:{newVel}")
+# from cannonConstants import *
+# from ballisticsCalc import *
+# def testArea():
+#     # Testing area - running some functions manually
+#
+#     # Test - 10k target, comparing prediction and reality. 
+#     countA = 19
+#     countB = 152
+#     velA = getChargePearlPushVelocity(chargePositions[3], pearlPosition)
+#     velB = getChargePearlPushVelocity(chargePositions[0], pearlPosition)
+#     velVec = velA * countA + velB * countB
+#     velVec += pearlInitialVelocity
+#     dummyPos = array([0, 0, 0])
+#     newPos, newVel = projectileTickStep(dummyPos, velVec)
+#     print(f"next tick vel:{newVel}")
+#
+#     print("Delta pos from tick zero:")
+#     for i in range(1, 200):
+#         predictedPos = pearlPosFromInitVel(i, velVec)
+#         print(f"{predictedPos[0]}\t{predictedPos[1]}\t{predictedPos[2]}")
     
-    print("Delta pos from tick zero:")
-    for i in range(1, 200):
-        predictedPos = pearlPosFromInitVel(i, velVec)
-        print(f"{predictedPos[0]}\t{predictedPos[1]}\t{predictedPos[2]}")
-    
+def getItemsForStackSize(breezeAmt : int, stackSize : int) -> int:
+    """Get amount of items in hopper to generate required number of breeze charges. 
+        Formula was found experimentally, not very precise or accurate.
 
+    Args:
+        breezeAmt (int): number of breezes in generator
+        stackSize (int): desired breeze stack size
+
+    Returns:
+        int: amount of items in hopper (approximate)
+    """
+    if stackSize == 0 or breezeAmt == 0:
+        return 0
+    rawAmt = (stackSize / (0.175 * breezeAmt)) + 5.5
+    return int(ceil(rawAmt))
 
 def guiMain():
     
@@ -77,12 +84,15 @@ def guiMain():
         cannonOrigin = array(originCoords.getCoords())
         targetPos = array(targetCoords.getCoords())
         quadId, flyTime, firstStack, lastStack, actualPos = calculateLaunchParameters(cannonDir, cannonOrigin, targetPos)
+        safeBreezeAmt = int(breezeAmt.get()) if breezeAmt.get().isdecimal() else 0
+        firstItems = getItemsForStackSize(safeBreezeAmt, firstStack)
+        lastItems = getItemsForStackSize(safeBreezeAmt, lastStack)
         quadDecode = ["Bottom-Left", "Top-left", "Top-Right", "Bottom-Right"]
         resultPrint = (
             f"Target position: {array2string(targetPos, precision=2, separator="; ")}\n"
             f"Sector in UI: {quadDecode[quadId.value]}\n"
-            f"First charge stack size: {firstStack}\n"
-            f"Last charge stack size: {lastStack}\n"
+            f"First charge stack size: {firstStack} (~{firstItems} items)\n"
+            f"Last charge stack size: {lastStack} (~{lastItems} items)\n"
             f"Nearest hit position: {array2string(actualPos, precision=2, separator="; ")}\n"
             f"Flight time: {flyTime} gameticks"
         )
@@ -100,7 +110,7 @@ def guiMain():
     mainframe.columnconfigure(2, weight=1)
 
     # Cannon position section
-    ttk.Label(mainframe, text="Cannon origin settings").grid(column=1, row=11, columnspan=2)
+    ttk.Label(mainframe, text="Cannon state").grid(column=1, row=11, columnspan=2)
 
     ttk.Label(mainframe, text="Coordinate").grid(column=1, row=12, sticky="E")
     originCoords = coordinateInput(mainframe)
@@ -112,10 +122,14 @@ def guiMain():
     dirSelect.grid(column=2, row=13, sticky="NW")
     dirSelect["values"] = (cardinalDir.NORTH.name, cardinalDir.SOUTH.name, cardinalDir.EAST.name, cardinalDir.WEST.name)
     dirSelect.state(["readonly"])
+    
+    breezeAmt = StringVar(value="1")
+    ttk.Label(mainframe, text="Breeze amount").grid(column=1, row=14, sticky="E")
+    ttk.Spinbox(mainframe, from_=1, to=99, textvariable=breezeAmt, state="readonly").grid(column=2, row=14, sticky="W")
 
     # Target select section
     ttk.Separator(mainframe, orient="horizontal").grid(column=1, row=20, columnspan=2, sticky="EW")
-    ttk.Label(mainframe, text="Target selection").grid(column=1, row=21, columnspan=2)
+    ttk.Label(mainframe, text="Target position").grid(column=1, row=21, columnspan=2)
 
     ttk.Label(mainframe, text="Coordinate").grid(column=1, row=22, sticky="E")
     targetCoords = coordinateInput(mainframe)
@@ -130,7 +144,7 @@ def guiMain():
     resultFrame.columnconfigure(1, weight=3)
     resultFrame.columnconfigure(2, weight=1)
 
-    resultText = Text(resultFrame, height=5, width=50)
+    resultText = Text(resultFrame, height=7, width=70)
     resultText.grid(column=1, row=1)
     resultText.insert(1.0, "Press Update to apply settings")
     resultText["state"] = "disabled"
@@ -142,53 +156,6 @@ def guiMain():
         child.grid_configure(padx=3, pady=3)
 
     root.mainloop()
-
-# This seems to work. TODO - polish
-#  (format coordinate output, expand result field)
-#  (add some info popups? Nah, make a README.md)
-#  better coord input checking (no, too hard)
-
-# /execute as @e[type=ender_pearl] run tellraw @a [{text:">Pos:"},{nbt:"Pos",entity:"@s"},{text:"\nVel:"},{nbt:"Motion",entity:"@s"}]
-
-# Ballistics issue - there is ~1-1.5% undershoot. Likely from small initial velocity of pearl. 
-# Need to measure it and include into calculations
-# Included - stll some undershoot. Direction is good, but vertical speed is overestimated.
-#   Data: origin - [-37; 200; 3], direction - West
-#       Charges: A - 60, B - 181. Setting - Top-Right
-#       Reported hit position - [4879.321726; 105.45697077; -9927.01908217]
-#       Actual hit position - [4859; 85; -9885] (in bottom of small ravine, idk why)
-#   Why the difference?
-#   Maybe effective initial pearl velocity is from next tick?
-#   No, doesn't quite help.
-#   This test is all on Paper server. Maybe it's different?
-#   For now idk, add ~1-2% to target coords
-# Tested simulated velocity - it perfectly matches with reality (at 1st tick after replosion)
-# Maybe formula is slightly wrong? Or there's some rounding error?
-"""
-More investigation of undershoot. Need to record entire path and study error.
-Test done in vanilla game
-
-Inputs: cannon origin at 89; 218; -23 (WEST)
-Outputs:
-Target position: [-10000     56      0]
-Sector in UI: Bottom-Left
-First charge stack size: 19.0
-Last charge stack size: 152.0
-Nearest hit position: [-9993.01629282    55.51439275    12.53274861]; Flight time: 147.0 ticks
-
-Landing coords: -9963; 56; 13
-
-Ok. This looks like 1 tick undershoot. If i raise target position 1-2 blocks then it should work fine.
-
-This was for vanilla backend. On paper there was 1-2% undershoot. 
-Initial trajectory matches very well in both cases. Idk man
-
-Verdict - Good Enough (tm)
-
-"""
-
-
-
 
 if __name__ == "__main__":
     # testArea()

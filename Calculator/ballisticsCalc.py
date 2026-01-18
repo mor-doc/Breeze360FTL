@@ -3,7 +3,8 @@ from numpy.linalg import inv, norm
 from scipy.optimize import fsolve
 from enum import Enum
 
-from cannonConstants import *
+import cannonConstants as ccon
+from cannonConstants import cardinalDir
 
 # More readable indexing for launch area quadrants. 
 # Directions are in cannon-local frame
@@ -18,7 +19,6 @@ def rotateCoord(startDir: cardinalDir, endDir: cardinalDir, coordVec: ndarray) -
     Rotate coordinate by azimuth from starting to final cardinal direction. 
     Example:
         rotateCoord(NORTH, EAST, [1, 0, 0]) => [0, 0, 1]
-    TODO - test use on array of vectors (Nx3 matrix)
 
     Args:
         startDir (cardinalDir): initial facing direction
@@ -142,7 +142,7 @@ def findChargeAmount(velA: ndarray, velB: ndarray, targetOffs: ndarray) -> ndarr
     def optimizeFunc(x):
         tick, amtA, amtB = x
         velVector = amtA * velA + amtB * velB
-        velVector += pearlInitialVelocity
+        velVector += ccon.pearlInitialVelocity
         pearlPos = pearlPosFromInitVel(tick, velVector)
         posError = targetOffs - pearlPos
         return posError
@@ -163,7 +163,7 @@ def getLocalQuadData(targetOffs : ndarray) -> tuple[launchQuadId, ndarray, ndarr
     
     # Tested, adjusted, seems to give correct results.
     
-    chargePearlVectors = chargePositions - pearlPosition
+    chargePearlVectors = ccon.chargePositions - ccon.pearlPosition
     
     # Add target displacement into same array for batch processing
     allVectorArr = vstack((chargePearlVectors, -targetOffs))
@@ -183,8 +183,8 @@ def getLocalQuadData(targetOffs : ndarray) -> tuple[launchQuadId, ndarray, ndarr
     
     cwNearestIndex = (ccwNearestIndex + 1) % 4
     quadId = launchQuadId(cwNearestIndex)
-    firstStackCoord = chargePositions[max(cwNearestIndex, ccwNearestIndex)]
-    secondStackcoord = chargePositions[min(cwNearestIndex, ccwNearestIndex)]
+    firstStackCoord = ccon.chargePositions[max(cwNearestIndex, ccwNearestIndex)]
+    secondStackcoord = ccon.chargePositions[min(cwNearestIndex, ccwNearestIndex)]
     
     return (quadId, firstStackCoord, secondStackcoord)
 
@@ -206,19 +206,19 @@ def calculateLaunchParameters(cannonDir : cardinalDir, cannonPos: ndarray, targe
             - nearest possible coordinates to target
     """
 
-    shootingPos = cannonPos + rotateCoord(defaultFacingDir, cannonDir, itemToOriginOffset)
+    shootingPos = cannonPos + rotateCoord(ccon.defaultFacingDir, cannonDir, ccon.itemToOriginOffset)
     globalTargetOffset = targetPos - shootingPos
-    localTargetOffset = rotateCoord(cannonDir, defaultFacingDir, globalTargetOffset)
+    localTargetOffset = rotateCoord(cannonDir, ccon.defaultFacingDir, globalTargetOffset)
 
 
     quadId, stackPosA, stackPosB = getLocalQuadData(localTargetOffset)
-    velA = getChargePearlPushVelocity(stackPosA, pearlPosition)
-    velB = getChargePearlPushVelocity(stackPosB, pearlPosition)
+    velA = getChargePearlPushVelocity(stackPosA, ccon.pearlPosition)
+    velB = getChargePearlPushVelocity(stackPosB, ccon.pearlPosition)
     idealCannonSetting = findChargeAmount(velA, velB, localTargetOffset)
     # Get realistic values, check rounding error
     ticks, chargesA, chargesB = idealCannonSetting.round()
     velVector = chargesA * velA + chargesB * velB
     actualLocalOffs = pearlPosFromInitVel(ticks, velVector)
-    actualLandingPos = shootingPos + rotateCoord(defaultFacingDir, cannonDir, actualLocalOffs)
+    actualLandingPos = shootingPos + rotateCoord(ccon.defaultFacingDir, cannonDir, actualLocalOffs)
     
-    return (quadId, ticks, chargesA, chargesB, actualLandingPos)
+    return (quadId, int(ticks), int(chargesA), int(chargesB), actualLandingPos)
