@@ -1,19 +1,15 @@
 
 # Minecraft 360 degree wind charge pearl cannon
 
-<img src="Images/1.png" height="300"/>
-<img src="Images/3.png" height="300"/>
-<img src="Images/4.png" height="300"/>
+<img src="Images/1.png" height="150"/> <img src="Images/3.png" height="150"/> <img src="Images/4.png" height="150"/>
 
-<img src="Images/7.png" height="200"/>
-<img src="Images/8.png" height="200"/>
-<img src="Images/9.png" height="200"/>
+<img src="Images/7.png" height="100"/> <img src="Images/8.png" height="100"/> <img src="Images/9.png" height="100"/>
 
 ## Overview
 
 This project contains a Minecraft build of semi-automated, omnidirectional, breeze powered ender pearl cannon. 
 
-Additionally, a ballistic calculator is written in Python. It converts data about cannon and target into a firing solution. See manual in .
+Additionally, a ballistic calculator is written in Python. It converts data about cannon and target into a firing solution. See manual in Calculator folder.
 
 Key features:
 - Any firing angle
@@ -79,7 +75,7 @@ Colored pink. Uses trapped breezes to generate wind charges. Breezes must be nam
 Main drawback of generator is an imprecise stack size, because breezes fire randomly. Single breeze design can be precisely controlled (see [Hectoris919](https://www.youtube.com/watch?v=So3EAnSgX7o) on YouTube), but was not used in favor of speed. Solution to low precisin is the Manual trim station.
 
 An approximate formula to get item count from charge stack size was experimentally derived (using 10 breezes):  
-$y = {x} over {0.175 * N} + {5.5}$, 
+$y = \dfrac{x}{0.175 * N} + {5.5}$,  
 where y is hopper item count, x is wind charge stack size, N is amount of breezes in generator.  
 Recommended way is to go slightly above and trim down manually.
 
@@ -116,11 +112,11 @@ Colored light blue to tell apart individual modules.
 
 ## Contact info
 
-If you have any questions, try contacting me at max.etching316@passinbox.com.
+If you have any questions, you can contact me at max.etching316@passinbox.com.
 
 ## License
 
 This work is dedicated to the public domain via CC0 (Creative Commons Zero).  
-While not required, please provide credit to me ("mor_doc") when using this work.
+While not required, please provide credit (to "mor_doc") when using this work.
 
 
