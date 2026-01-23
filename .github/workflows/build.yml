@@ -69,4 +69,4 @@ jobs:
           body: "Compiled calculator executables"
           files: |
             ./artifacts/**/*CannonCalc*
-          draft: true
+          draft: false
