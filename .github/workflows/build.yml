@@ -61,4 +61,4 @@ jobs:
           files: |
             **/*.exe
             **/*
-          draft: true
+          draft: false
