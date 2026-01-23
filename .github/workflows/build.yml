@@ -1,0 +1,64 @@
+name: Build Executables
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: linux
+            pyinstaller_cmd: pyinstaller --onefile --name CannonCalc-Linux Calculator/calcWindow.py 
+          - os: windows-latest
+            artifact_name: windows
+            pyinstaller_cmd: pyinstaller --onefile --windowed --name CannonCalc-Win Calculator/calcWindow.py
+
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - uses: actions/checkout@v6
+      
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          
+      - name: Install dependencies
+        run: pip install -r Calculator/requirements.txt
+
+      - name: Install pyinstaller
+        run: pip install pyinstaller
+        
+      - name: Build executable
+        run: ${{ matrix.pyinstaller_cmd }}
+        
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.artifact_name }}-calc-exec
+          path: |
+            dist/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: "Compiled calculator executables"
+          files: |
+            **/*.exe
+            **/*
+          draft: true
