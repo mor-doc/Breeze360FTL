@@ -17,7 +17,7 @@ Key features:
 - Semi-automated operation
 - Works in Overworld and Nether, no modifications required
 - Fits inside 44x44x44 cube
-- Tested in 1.21.8-1.21.10 Vanilla and on local 1.21.8 Paper server
+- Tested in 1.21.8-1.21.11 Vanilla (Fabric) and on local 1.21.8 Paper server
 
 Limitations / things to optimize:
 - Wind charge generator is optimized for speed and reusability over precision. It can be replaced with one of existing precise single breeze designs or with breeze charge item dispencers. Execution is left as an exercise for the reader
@@ -112,7 +112,7 @@ Colored light blue to tell apart individual modules.
 
 ## Contact info
 
-If you have any questions, you can contact me at max.etching316@passinbox.com.
+If you have any questions, you can contact me at "max.etching316@passinbox.com".
 
 ## License
 
