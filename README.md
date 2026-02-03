@@ -112,7 +112,8 @@ Colored light blue to tell apart individual modules.
 
 ## Contact info
 
-If you have any questions, you can contact me at "max.etching316@passinbox.com".
+If you have any questions, there is a [project thread](https://discord.com/channels/809607812312858684/1464662466842595452) in [TNT Archive](https://discord.gg/vPyUBcdmZV) Discord server.  
+Alternatively, you can contact me at "max.etching316@passinbox.com".
 
 ## License
 
