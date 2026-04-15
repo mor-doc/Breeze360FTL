@@ -7,6 +7,8 @@
 
 ## Overview
 
+*( ⚠️ see https://github.com/mor-doc/Breeze360FTL_MKII for improved version ! )*
+
 This project contains a Minecraft build of semi-automated, omnidirectional, breeze powered ender pearl cannon. 
 
 Additionally, a ballistic calculator is written in Python. It converts data about cannon and target into a firing solution. See manual in Calculator folder.
